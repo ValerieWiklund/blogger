@@ -1,9 +1,11 @@
 import express from 'express'
 import BlogService from '../services/BlogService'
 import { Authorize } from '../middleware/authorize.js'
+import CommentService from '../services/CommentService'
 
 
 let _bs = new BlogService().repository
+let _cs = new CommentService().repository
 
 
 export default class BlogController {
@@ -11,6 +13,7 @@ export default class BlogController {
     this.router = express.Router()
       .get('', this.getAll)
       .get('/:id', this.getById)
+      .get('/:id/comments', this.getComments)
       .use(Authorize.authenticated)
       .post('', this.create)
       .put('/:id', this.edit)
@@ -20,14 +23,14 @@ export default class BlogController {
 
   async getAll(req, res, next) {
     try {
-      let data = await _bs.find({})
+      let data = await _bs.find({}).populate("author")
       return res.send(data)
     } catch (error) { next(error) }
   }
 
   async getById(req, res, next) {
     try {
-      let data = await _bs.findById(req.params.id)
+      let data = await _bs.findById(req.params.id).populate("author")
       if (!data) {
         throw new Error("Invalid Id")
       }
@@ -35,9 +38,15 @@ export default class BlogController {
     } catch (error) { next(error) }
   }
 
+  async getComments(req, res, next) {
+    try {
+      let data = await _cs.find({ blogId: req.params.id }).populate('comment')
+      return res.send(data)
+    } catch (error) { next(error) }
+  }
   async create(req, res, next) {
     try {
-      req.body.creatorId = req.session.uid
+      req.body.author = req.session.uid
       let data = await _bs.create(req.body)
       res.send(data)
     } catch (error) { next(error) }
@@ -45,7 +54,7 @@ export default class BlogController {
 
   async edit(req, res, next) {
     try {
-      let data = await _bs.findOneAndUpdate({ _id: req.params.id, creatorId: req.session.uid }, req.body, { new: true })
+      let data = await _bs.findOneAndUpdate({ _id: req.params.id, author: req.session.uid }, req.body, { new: true }).populate('author')
       if (data) {
         return res.send(data)
       }
@@ -55,7 +64,7 @@ export default class BlogController {
 
   async delete(req, res, next) {
     try {
-      let data = await _bs.findOneAndRemove({ _id: req.params.id, creatorId: req.session.uid })
+      let data = await _bs.findOneAndRemove({ _id: req.params.id, author: req.session.uid })
       if (!data) {
         throw new Error("Invalid Id")
       }

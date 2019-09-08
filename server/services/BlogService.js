@@ -7,7 +7,7 @@ const _model = new Schema({
   summary: { type: String, maxlength: 120 },
   imgURL: { type: String },
   body: { type: String, required: true },
-  creatorId: { type: ObjectId, ref: 'User', required: true }
+  author: { type: ObjectId, ref: 'User', required: true },
 }, { timestamps: true })
 
 export default class BlogService {
