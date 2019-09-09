@@ -18,7 +18,7 @@ export default class CommentController {
 
   async getAll(req, res, next) {
     try {
-      let data = await _cs.find({}).populate("author")
+      let data = await _cs.find({}).populate("author", "name")
       return res.send(data)
     } catch (error) { next(error) }
   }
@@ -33,7 +33,7 @@ export default class CommentController {
 
   async edit(req, res, next) {
     try {
-      let data = await _cs.findOneAndUpdate({ _id: req.params.id, author: req.session.uid }, req.body, { new: true })
+      let data = await _cs.findOneAndUpdate({ _id: req.params.id, author: req.session.uid }, req.body, { new: true }).populate("author", "name")
       if (data) {
         return res.send(data)
       }

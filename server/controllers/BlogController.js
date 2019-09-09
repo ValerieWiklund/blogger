@@ -23,14 +23,14 @@ export default class BlogController {
 
   async getAll(req, res, next) {
     try {
-      let data = await _bs.find({}).populate("author")
+      let data = await _bs.find({}).populate("author", "name")
       return res.send(data)
     } catch (error) { next(error) }
   }
 
   async getById(req, res, next) {
     try {
-      let data = await _bs.findById(req.params.id).populate("author")
+      let data = await _bs.findById(req.params.id).populate("author", "name")
       if (!data) {
         throw new Error("Invalid Id")
       }
@@ -40,7 +40,7 @@ export default class BlogController {
 
   async getComments(req, res, next) {
     try {
-      let data = await _cs.find({ blogId: req.params.id }).populate('comment')
+      let data = await _cs.find({ blogId: req.params.id }).populate('comment').populate('author', 'name')
       return res.send(data)
     } catch (error) { next(error) }
   }
@@ -54,7 +54,7 @@ export default class BlogController {
 
   async edit(req, res, next) {
     try {
-      let data = await _bs.findOneAndUpdate({ _id: req.params.id, author: req.session.uid }, req.body, { new: true }).populate('author')
+      let data = await _bs.findOneAndUpdate({ _id: req.params.id, author: req.session.uid }, req.body, { new: true }).populate('author', 'name')
       if (data) {
         return res.send(data)
       }
